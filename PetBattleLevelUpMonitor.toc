@@ -1,0 +1,8 @@
+## Interface: 110200
+## Title: Pet Battle Level Up Monitor
+## Author: Claude
+## Version: 1.0.0
+## Notes: Monitors experience gain and level-up progress during pet battles for characters under level 80
+## SavedVariables:
+
+PetBattleLevelUpMonitor.lua
