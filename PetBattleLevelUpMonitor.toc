@@ -3,6 +3,6 @@
 ## Author: Claude
 ## Version: 1.0.0
 ## Notes: Monitors experience gain and level-up progress during pet battles for characters under level 80
-## SavedVariables:
+## SavedVariables: PetBattleLevelUpData
 
 PetBattleLevelUpMonitor.lua
