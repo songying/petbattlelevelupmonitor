@@ -90,36 +90,61 @@ local function CreateProgressFrame()
     })
     monitorFrame:SetBackdropColor(0, 0, 0, 0.9)
 
-    -- Create fonts with manual scaling
-    local font1 = CreateFont("PetBattleFont1")
-    local font2 = CreateFont("PetBattleFont2")
-    local font3 = CreateFont("PetBattleFont3")
-    local font4 = CreateFont("PetBattleFont4")
-    local font5 = CreateFont("PetBattleFont5")
-
-    -- Set font properties with scaling - increased base size to 16px
+    -- Text displays with smart font setting
     local baseFontSize = 16 * fontSize
-    font1:SetFont("Fonts\\FRIZQT__.TTF", baseFontSize, "OUTLINE")
-    font2:SetFont("Fonts\\FRIZQT__.TTF", baseFontSize, "OUTLINE")
-    font3:SetFont("Fonts\\FRIZQT__.TTF", baseFontSize, "OUTLINE")
-    font4:SetFont("Fonts\\FRIZQT__.TTF", baseFontSize, "OUTLINE")
-    font5:SetFont("Fonts\\FRIZQT__.TTF", baseFontSize, "OUTLINE")
+    local locale = GetLocale()
 
-    -- Text displays with scaled fonts and positioning
-    monitorFrame.text1 = monitorFrame:CreateFontString(nil, "OVERLAY")
-    monitorFrame.text1:SetFontObject(font1)
+    -- Function to set appropriate font for locale
+    local function SetSmartFont(fontString, size)
+        if not fontString then
+            print("ERROR: SetSmartFont called with nil fontString")
+            return false
+        end
+
+        local success = false
+
+        -- Try Chinese font first for Chinese locales
+        if locale == "zhCN" or locale == "zhTW" then
+            success = fontString:SetFont("Fonts\\ARHei.ttf", size, "OUTLINE")
+            if success and debugMode then
+                print("Using Chinese font ARHei.ttf")
+            end
+        end
+
+        -- Fallback to English font
+        if not success then
+            success = fontString:SetFont("Fonts\\FRIZQT__.TTF", size, "OUTLINE")
+            if success and debugMode then
+                print("Using English font FRIZQT__.TTF")
+            end
+        end
+
+        -- Final fallback - just use the inherited font from GameFontNormal
+        if not success then
+            -- Don't set font, use the default from GameFontNormal template
+            if debugMode then
+                print("Using default font inheritance for locale: " .. locale)
+            end
+            return false
+        end
+
+        return success
+    end
+
+    monitorFrame.text1 = monitorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     monitorFrame.text1:SetPoint("TOPLEFT", margin, -margin)
     monitorFrame.text1:SetTextColor(1, 1, 1, 1)
+    SetSmartFont(monitorFrame.text1, baseFontSize)
 
-    monitorFrame.text2 = monitorFrame:CreateFontString(nil, "OVERLAY")
-    monitorFrame.text2:SetFontObject(font2)
+    monitorFrame.text2 = monitorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     monitorFrame.text2:SetPoint("TOPLEFT", monitorFrame.text1, "BOTTOMLEFT", 0, spacing)
     monitorFrame.text2:SetTextColor(1, 1, 0, 1)
+    SetSmartFont(monitorFrame.text2, baseFontSize)
 
-    monitorFrame.text3 = monitorFrame:CreateFontString(nil, "OVERLAY")
-    monitorFrame.text3:SetFontObject(font3)
+    monitorFrame.text3 = monitorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     monitorFrame.text3:SetPoint("TOPLEFT", monitorFrame.text2, "BOTTOMLEFT", 0, spacing)
     monitorFrame.text3:SetTextColor(0, 1, 0, 1)
+    SetSmartFont(monitorFrame.text3, baseFontSize)
 
     -- Progress bar
     local progressBarWidth = scaledWidth - (margin * 2)
@@ -138,19 +163,44 @@ local function CreateProgressFrame()
     bg:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
     bg:SetVertexColor(0.2, 0.2, 0.2, 0.8)
 
-    monitorFrame.text4 = monitorFrame:CreateFontString(nil, "OVERLAY")
-    monitorFrame.text4:SetFontObject(font4)
+    monitorFrame.text4 = monitorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     monitorFrame.text4:SetPoint("TOPLEFT", monitorFrame.progressBar, "BOTTOMLEFT", 0, spacing)
     monitorFrame.text4:SetTextColor(0.8, 0.8, 1, 1)
+    SetSmartFont(monitorFrame.text4, baseFontSize)
 
-    monitorFrame.text5 = monitorFrame:CreateFontString(nil, "OVERLAY")
-    monitorFrame.text5:SetFontObject(font5)
+    monitorFrame.text5 = monitorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     monitorFrame.text5:SetPoint("TOPLEFT", monitorFrame.text4, "BOTTOMLEFT", 0, spacing)
     monitorFrame.text5:SetTextColor(1, 0.8, 0.4, 1)
+    SetSmartFont(monitorFrame.text5, baseFontSize)
 
     monitorFrame:Hide()
-    if debugMode then
+
+    -- Verify all text objects were created successfully
+    local creationSuccess = true
+    if not monitorFrame.text1 then
+        print("ERROR: text1 creation failed")
+        creationSuccess = false
+    end
+    if not monitorFrame.text2 then
+        print("ERROR: text2 creation failed")
+        creationSuccess = false
+    end
+    if not monitorFrame.text3 then
+        print("ERROR: text3 creation failed")
+        creationSuccess = false
+    end
+    if not monitorFrame.text4 then
+        print("ERROR: text4 creation failed")
+        creationSuccess = false
+    end
+    if not monitorFrame.text5 then
+        print("ERROR: text5 creation failed")
+        creationSuccess = false
+    end
+
+    if debugMode or not creationSuccess then
         print("Pet Battle Level Up Monitor: Frame created - Size: " .. scaledWidth .. "x" .. scaledHeight .. ", Font size: " .. baseFontSize)
+        print("Text objects created: " .. (creationSuccess and "✅ All successful" or "❌ Some failed"))
     end
 end
 
@@ -209,6 +259,20 @@ end
 local function UpdateDisplay()
     if not monitorFrame or not monitorFrame:IsShown() then
         return
+    end
+
+    -- Check if text objects exist, recreate frame if needed
+    if not monitorFrame.text1 or not monitorFrame.text2 or not monitorFrame.text3 or not monitorFrame.text4 or not monitorFrame.text5 then
+        if debugMode then
+            print("Text objects missing, recreating frame...")
+        end
+        monitorFrame:Hide()
+        monitorFrame = nil
+        CreateProgressFrame()
+        if not monitorFrame.text1 then
+            print("ERROR: Failed to create text objects - frame creation failed")
+            return
+        end
     end
 
     local playerName = UnitName("player")
@@ -716,6 +780,7 @@ SlashCmdList["PETBATTLEMON"] = function(msg)
         print("/pblm exportdata - Export current data structure for backup")
         print("/pblm loaddefaults - Load missing levels from default data")
         print("/pblm validatedata - Validate data format consistency")
+        print("/pblm fonttest - Test font display for Chinese/localized characters")
     elseif msg == "test" then
         print("Pet Battle Level Up Monitor is working!")
         print("Player: " .. UnitName("player") .. " Level: " .. UnitLevel("player"))
@@ -937,9 +1002,24 @@ SlashCmdList["PETBATTLEMON"] = function(msg)
 
         -- Check data format matches savedData.lua style
         print("Data format: " .. (invalidCount == 0 and "✅ Compatible with savedData.lua" or "❌ Needs fixing"))
+    elseif msg == "fonttest" then
+        print("=== Font Display Test ===")
+        local locale = GetLocale()
+        print("Current locale: " .. locale)
+        print("Player name: " .. UnitName("player"))
+
+        -- Force recreate frame with GameFont (supports all locales)
+        if monitorFrame then
+            monitorFrame:Hide()
+            monitorFrame = nil
+        end
+        CreateProgressFrame()
+        monitorFrame:Show()
+        print("Frame recreated with GameFont (supports Chinese characters)")
+        print("Check if your character name displays correctly now")
     else
         print("Unknown command: " .. msg)
-        print("Available commands: test, show, hide, data, save, reload, size, big, huge, debug, forcesave, fixdata, parsedata, exportdata, loaddefaults, validatedata")
+        print("Available commands: test, show, hide, data, save, reload, size, big, huge, debug, forcesave, fixdata, parsedata, exportdata, loaddefaults, validatedata, fonttest")
     end
 end
 
