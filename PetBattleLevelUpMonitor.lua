@@ -169,15 +169,17 @@ local function CalculateTimeToLevel80()
     local totalTimeNeeded = 0
 
     -- Calculate battles needed for current level
-    if PetBattleLevelUpData.levelData[currentLevel] and PetBattleLevelUpData.levelData[currentLevel].xpGainPerBattle > 0 then
-        local battlesThisLevel = math.ceil(remainingXPThisLevel / PetBattleLevelUpData.levelData[currentLevel].xpGainPerBattle)
+    local currentLevelData = PetBattleLevelUpData.levelData[tostring(currentLevel)]
+    if currentLevelData and currentLevelData.xpGainPerBattle > 0 then
+        local battlesThisLevel = math.ceil(remainingXPThisLevel / currentLevelData.xpGainPerBattle)
         totalBattlesNeeded = totalBattlesNeeded + battlesThisLevel
     end
 
     -- Calculate battles needed for remaining levels
     for level = currentLevel + 1, 79 do
-        if PetBattleLevelUpData.levelData[level] and PetBattleLevelUpData.levelData[level].xpGainPerBattle > 0 then
-            local battlesForLevel = math.ceil(PetBattleLevelUpData.levelData[level].totalXpNeeded / PetBattleLevelUpData.levelData[level].xpGainPerBattle)
+        local levelData = PetBattleLevelUpData.levelData[tostring(level)]
+        if levelData and levelData.xpGainPerBattle > 0 then
+            local battlesForLevel = math.ceil(levelData.totalXpNeeded / levelData.xpGainPerBattle)
             totalBattlesNeeded = totalBattlesNeeded + battlesForLevel
         else
             return "Need more data for level " .. level
@@ -233,8 +235,11 @@ local function UpdateDisplay()
     local remainingBattles = 0
     if sessionData.lastRoundXP > 0 then
         remainingBattles = math.ceil(remainingXP / sessionData.lastRoundXP)
-    elseif PetBattleLevelUpData.levelData[playerLevel] and PetBattleLevelUpData.levelData[playerLevel].xpGainPerBattle > 0 then
-        remainingBattles = math.ceil(remainingXP / PetBattleLevelUpData.levelData[playerLevel].xpGainPerBattle)
+    else
+        local playerLevelData = PetBattleLevelUpData.levelData[tostring(playerLevel)]
+        if playerLevelData and playerLevelData.xpGainPerBattle > 0 then
+            remainingBattles = math.ceil(remainingXP / playerLevelData.xpGainPerBattle)
+        end
     end
 
     if remainingBattles > 0 then
@@ -244,7 +249,15 @@ local function UpdateDisplay()
 
         if sessionData.averageTime > 0 then
             remainingTime = remainingBattles * sessionData.averageTime
-            timeText = string.format(" (%.0fs)", remainingTime)
+
+            -- Format time as minutes and seconds if >= 60 seconds
+            if remainingTime >= 60 then
+                local minutes = math.floor(remainingTime / 60)
+                local seconds = math.floor(remainingTime % 60)
+                timeText = string.format(" (%dm%ds)", minutes, seconds)
+            else
+                timeText = string.format(" (%.0fs)", remainingTime)
+            end
         end
 
         monitorFrame.text3:SetText(string.format("%d%% (%d/%d) - %d battles%s left", xpPercent, currentXP, maxXP, remainingBattles, timeText))
@@ -269,6 +282,205 @@ end
 
 -- Force save function already defined above
 
+-- Load default data from savedData.lua (simulated - in WoW we'd include it as a separate addon file)
+local function LoadDefaultData()
+    -- Default data structure based on savedData.lua
+    local defaultData = {
+        ["28"] = { totalXpNeeded = 33960, xpGainPerBattle = 2500 },
+        ["29"] = { totalXpNeeded = 35985, xpGainPerBattle = 2562 },
+        ["30"] = { totalXpNeeded = 38075, xpGainPerBattle = 2687 },
+        ["31"] = { totalXpNeeded = 38430, xpGainPerBattle = 2750 },
+        ["32"] = { totalXpNeeded = 38725, xpGainPerBattle = 2812 },
+        ["33"] = { totalXpNeeded = 38970, xpGainPerBattle = 2937 },
+        ["34"] = { totalXpNeeded = 39155, xpGainPerBattle = 3000 },
+        ["35"] = { totalXpNeeded = 39280, xpGainPerBattle = 3062 },
+        ["36"] = { totalXpNeeded = 39355, xpGainPerBattle = 3187 },
+        ["37"] = { totalXpNeeded = 39370, xpGainPerBattle = 3250 },
+        ["38"] = { totalXpNeeded = 39325, xpGainPerBattle = 3312 },
+        ["39"] = { totalXpNeeded = 39225, xpGainPerBattle = 3437 },
+        ["40"] = { totalXpNeeded = 39070, xpGainPerBattle = 3500 },
+        ["41"] = { totalXpNeeded = 38860, xpGainPerBattle = 3562 },
+        ["42"] = { totalXpNeeded = 38590, xpGainPerBattle = 3687 },
+        ["43"] = { totalXpNeeded = 38265, xpGainPerBattle = 3750 },
+        ["44"] = { totalXpNeeded = 37880, xpGainPerBattle = 3812 },
+        ["45"] = { totalXpNeeded = 37440, xpGainPerBattle = 3937 },
+        ["46"] = { totalXpNeeded = 36945, xpGainPerBattle = 4000 },
+        ["47"] = { totalXpNeeded = 36395, xpGainPerBattle = 4125 },
+        ["48"] = { totalXpNeeded = 35785, xpGainPerBattle = 4187 },
+        ["49"] = { totalXpNeeded = 35115, xpGainPerBattle = 4250 },
+        ["50"] = { totalXpNeeded = 34395, xpGainPerBattle = 4375 },
+        ["51"] = { totalXpNeeded = 36305, xpGainPerBattle = 4437 },
+        ["52"] = { totalXpNeeded = 38265, xpGainPerBattle = 4500 },
+        ["53"] = { totalXpNeeded = 40275, xpGainPerBattle = 4625 },
+        ["54"] = { totalXpNeeded = 42330, xpGainPerBattle = 4687 },
+        ["55"] = { totalXpNeeded = 44430, xpGainPerBattle = 4750 },
+        ["56"] = { totalXpNeeded = 46580, xpGainPerBattle = 4875 },
+        ["57"] = { totalXpNeeded = 48780, xpGainPerBattle = 4937 },
+        ["58"] = { totalXpNeeded = 51030, xpGainPerBattle = 5000 },
+        ["59"] = { totalXpNeeded = 53320, xpGainPerBattle = 5125 },
+        ["60"] = { totalXpNeeded = 55665, xpGainPerBattle = 5187 },
+        ["61"] = { totalXpNeeded = 58055, xpGainPerBattle = 5250 },
+        ["62"] = { totalXpNeeded = 60490, xpGainPerBattle = 5375 },
+        ["63"] = { totalXpNeeded = 62980, xpGainPerBattle = 5437 },
+        ["64"] = { totalXpNeeded = 65510, xpGainPerBattle = 5500 },
+        ["65"] = { totalXpNeeded = 68095, xpGainPerBattle = 5625 },
+        ["66"] = { totalXpNeeded = 70720, xpGainPerBattle = 5687 },
+        ["67"] = { totalXpNeeded = 73400, xpGainPerBattle = 5812 },
+        ["68"] = { totalXpNeeded = 76125, xpGainPerBattle = 5875 },
+        ["69"] = { totalXpNeeded = 78895, xpGainPerBattle = 6500 },
+        ["70"] = { totalXpNeeded = 225105, xpGainPerBattle = 6625 },
+        ["71"] = { totalXpNeeded = 247375, xpGainPerBattle = 6687 },
+        ["72"] = { totalXpNeeded = 270190, xpGainPerBattle = 6812 },
+        ["73"] = { totalXpNeeded = 293540, xpGainPerBattle = 6875 },
+        ["74"] = { totalXpNeeded = 317430, xpGainPerBattle = 7000 },
+        ["75"] = { totalXpNeeded = 341865, xpGainPerBattle = 7062 },
+        ["76"] = { totalXpNeeded = 366835, xpGainPerBattle = 7187 },
+        ["77"] = { totalXpNeeded = 392350, xpGainPerBattle = 7250 },
+        ["78"] = { totalXpNeeded = 418405, xpGainPerBattle = 7375 },
+        ["79"] = { totalXpNeeded = 445000, xpGainPerBattle = 7625 }
+    }
+
+    if debugMode then
+        print("Loaded default data for levels 28-79")
+    end
+
+    return defaultData
+end
+
+-- Fill missing level data with defaults
+local function FillMissingLevelData()
+    local defaultData = LoadDefaultData()
+    local addedCount = 0
+
+    for level, data in pairs(defaultData) do
+        if not PetBattleLevelUpData.levelData[level] then
+            PetBattleLevelUpData.levelData[level] = {
+                totalXpNeeded = data.totalXpNeeded,
+                xpGainPerBattle = data.xpGainPerBattle
+            }
+            addedCount = addedCount + 1
+
+            if debugMode then
+                print("Added default data for level " .. level .. " (XP: " .. data.xpGainPerBattle .. ")")
+            end
+        end
+    end
+
+    if addedCount > 0 then
+        print("LOADED: Added " .. addedCount .. " missing levels from default data")
+        ForceSaveData()
+    elseif debugMode then
+        print("No missing level data - all levels already present")
+    end
+
+    return addedCount
+end
+
+-- Parse array-based level data using XP value sorting
+local function ParseLevelDataByXP()
+    if not PetBattleLevelUpData.levelData then
+        return {}
+    end
+
+    local arrayData = {}
+    local hasArrayData = false
+
+    -- Collect array-based data entries
+    for i = 1, 80 do
+        if PetBattleLevelUpData.levelData[i] and type(PetBattleLevelUpData.levelData[i]) == "table" then
+            local entry = PetBattleLevelUpData.levelData[i]
+            if entry.xpGainPerBattle and entry.totalXpNeeded then
+                table.insert(arrayData, {
+                    index = i,
+                    xpGainPerBattle = entry.xpGainPerBattle,
+                    totalXpNeeded = entry.totalXpNeeded
+                })
+                hasArrayData = true
+            end
+        end
+    end
+
+    if not hasArrayData or #arrayData == 0 then
+        return {}
+    end
+
+    -- Sort by xpGainPerBattle in ascending order
+    table.sort(arrayData, function(a, b)
+        return a.xpGainPerBattle < b.xpGainPerBattle
+    end)
+
+    -- Map to correct levels: highest XP = current level, descending from there
+    local currentLevel = UnitLevel("player")
+    local fixedData = {}
+
+    -- Start from the highest XP entry and work backwards
+    for i = #arrayData, 1, -1 do
+        local entry = arrayData[i]
+        local assignedLevel = currentLevel - (#arrayData - i)
+
+        if assignedLevel > 0 and assignedLevel <= 80 then
+            fixedData[tostring(assignedLevel)] = {
+                totalXpNeeded = entry.totalXpNeeded,
+                xpGainPerBattle = entry.xpGainPerBattle
+            }
+
+            if debugMode then
+                print("Mapped: Index " .. entry.index .. " (XP:" .. entry.xpGainPerBattle .. ") -> Level " .. assignedLevel)
+            end
+        end
+    end
+
+    print("PARSED: Recovered " .. #arrayData .. " levels using XP-based mapping")
+    print("Mapped to levels " .. (currentLevel - #arrayData + 1) .. " through " .. currentLevel)
+
+    return fixedData
+end
+
+-- Fix corrupted level data with intelligent parsing
+local function FixLevelData()
+    if not PetBattleLevelUpData.levelData then
+        PetBattleLevelUpData.levelData = {}
+    end
+
+    -- Check if we have proper key-value data already
+    local hasProperKeys = false
+    local hasArrayData = false
+
+    for key, value in pairs(PetBattleLevelUpData.levelData) do
+        if type(key) == "string" and tonumber(key) and type(value) == "table" then
+            hasProperKeys = true
+            break
+        elseif type(key) == "number" and type(value) == "table" then
+            hasArrayData = true
+        end
+    end
+
+    -- If we already have proper string keys, no need to fix
+    if hasProperKeys and not hasArrayData then
+        if debugMode then
+            print("Level data structure is already correct")
+        end
+        return
+    end
+
+    -- Parse array data using XP-based intelligent mapping
+    local fixedData = ParseLevelDataByXP()
+
+    if next(fixedData) then
+        PetBattleLevelUpData.levelData = fixedData
+        ForceSaveData()
+
+        -- Save to tempdata for backup
+        if debugMode then
+            print("Level data structure fixed and saved")
+        end
+    else
+        if debugMode then
+            print("No array data found to parse")
+        end
+    end
+end
+
 -- Record level data
 local function RecordLevelData(level, xpGained)
     if level <= 0 or xpGained <= 0 then
@@ -280,7 +492,8 @@ local function RecordLevelData(level, xpGained)
         PetBattleLevelUpData.levelData = {}
     end
 
-    PetBattleLevelUpData.levelData[level] = {
+    -- Store data using level number as key (not array index)
+    PetBattleLevelUpData.levelData[tostring(level)] = {
         xpGainPerBattle = xpGained,
         totalXpNeeded = UnitXPMax("player")
     }
@@ -418,6 +631,13 @@ local function OnEvent(self, event, ...)
             if debugMode then
                 print("Pet Battle Level Up Monitor: ADDON_LOADED event received!")
             end
+
+            -- Fix any corrupted level data on load
+            FixLevelData()
+
+            -- Fill missing level data with defaults from savedData.lua
+            FillMissingLevelData()
+
             -- Load existing data if available
             if PetBattleLevelUpData and PetBattleLevelUpData.levelData then
                 local count = 0
@@ -491,6 +711,11 @@ SlashCmdList["PETBATTLEMON"] = function(msg)
         print("/pblm huge - Set to 4.0x size")
         print("/pblm debug - Toggle debug mode")
         print("/pblm forcesave - Force save data immediately (reloads UI)")
+        print("/pblm fixdata - Fix corrupted level data structure")
+        print("/pblm parsedata - Parse array data using XP-based intelligent mapping")
+        print("/pblm exportdata - Export current data structure for backup")
+        print("/pblm loaddefaults - Load missing levels from default data")
+        print("/pblm validatedata - Validate data format consistency")
     elseif msg == "test" then
         print("Pet Battle Level Up Monitor is working!")
         print("Player: " .. UnitName("player") .. " Level: " .. UnitLevel("player"))
@@ -517,10 +742,23 @@ SlashCmdList["PETBATTLEMON"] = function(msg)
     elseif msg == "data" then
         print("=== Recorded Level Data ===")
         local count = 0
+        local levels = {}
+
+        -- Collect and sort level numbers for better display
         for level, data in pairs(PetBattleLevelUpData.levelData) do
-            print("Level " .. level .. ": " .. data.xpGainPerBattle .. " XP per battle (Total XP: " .. data.totalXpNeeded .. ")")
-            count = count + 1
+            if type(data) == "table" and data.xpGainPerBattle then
+                table.insert(levels, tonumber(level))
+                count = count + 1
+            end
         end
+
+        table.sort(levels)
+
+        for _, level in ipairs(levels) do
+            local data = PetBattleLevelUpData.levelData[tostring(level)]
+            print("Level " .. level .. ": " .. data.xpGainPerBattle .. " XP per battle (Total XP: " .. data.totalXpNeeded .. ")")
+        end
+
         if count == 0 then
             print("No data recorded yet")
         else
@@ -609,9 +847,99 @@ SlashCmdList["PETBATTLEMON"] = function(msg)
         ForceSaveData()
         sessionData.needsSave = false
         print("Data marked for saving - use /reload to save immediately")
+    elseif msg == "fixdata" then
+        print("Attempting to fix level data structure...")
+        FixLevelData()
+        print("Level data fix completed - use /pblm data to verify")
+    elseif msg == "parsedata" then
+        print("Parsing array data using XP-based intelligent mapping...")
+        local currentLevel = UnitLevel("player")
+        print("Current player level: " .. currentLevel)
+
+        local fixedData = ParseLevelDataByXP()
+        if next(fixedData) then
+            PetBattleLevelUpData.levelData = fixedData
+            ForceSaveData()
+            print("Data parsed and applied successfully!")
+            print("Use /pblm data to see the corrected level mapping")
+        else
+            print("No array data found to parse")
+        end
+    elseif msg == "exportdata" then
+        print("=== Current Data Structure Export ===")
+        print("-- Copy this to tempdata.lua for backup --")
+        print("PetBattleLevelUpData = {")
+        print('    levelData = {')
+
+        local hasData = false
+        for key, value in pairs(PetBattleLevelUpData.levelData) do
+            if type(value) == "table" and value.xpGainPerBattle and value.totalXpNeeded then
+                print('        ["' .. tostring(key) .. '"] = {')
+                print('            totalXpNeeded = ' .. value.totalXpNeeded .. ',')
+                print('            xpGainPerBattle = ' .. value.xpGainPerBattle)
+                print('        },')
+                hasData = true
+            end
+        end
+
+        if not hasData then
+            print('        -- No valid data found')
+        end
+
+        print('    },')
+        print('    fontSize = ' .. (PetBattleLevelUpData.fontSize or 2.0) .. ',')
+        print('    framePosition = { x = ' .. (PetBattleLevelUpData.framePosition and PetBattleLevelUpData.framePosition.x or 0) .. ', y = ' .. (PetBattleLevelUpData.framePosition and PetBattleLevelUpData.framePosition.y or 200) .. ' }')
+        print('}')
+        print("=== End Export ===")
+    elseif msg == "loaddefaults" then
+        print("Loading missing level data from defaults...")
+        local addedCount = FillMissingLevelData()
+        if addedCount > 0 then
+            print("Successfully added " .. addedCount .. " missing levels")
+        else
+            print("No missing levels found - all data present")
+        end
+    elseif msg == "validatedata" then
+        print("=== Data Format Validation ===")
+        local validCount = 0
+        local invalidCount = 0
+        local issues = {}
+
+        for level, data in pairs(PetBattleLevelUpData.levelData) do
+            if type(level) ~= "string" then
+                table.insert(issues, "Level key " .. tostring(level) .. " is not a string")
+                invalidCount = invalidCount + 1
+            elseif not tonumber(level) then
+                table.insert(issues, "Level key '" .. level .. "' is not a valid number string")
+                invalidCount = invalidCount + 1
+            elseif type(data) ~= "table" then
+                table.insert(issues, "Level " .. level .. " data is not a table")
+                invalidCount = invalidCount + 1
+            elseif not data.totalXpNeeded or not data.xpGainPerBattle then
+                table.insert(issues, "Level " .. level .. " missing required fields")
+                invalidCount = invalidCount + 1
+            else
+                validCount = validCount + 1
+            end
+        end
+
+        print("Valid entries: " .. validCount)
+        print("Invalid entries: " .. invalidCount)
+
+        if #issues > 0 then
+            print("Issues found:")
+            for _, issue in ipairs(issues) do
+                print("  - " .. issue)
+            end
+        else
+            print("✅ All data entries are properly formatted!")
+        end
+
+        -- Check data format matches savedData.lua style
+        print("Data format: " .. (invalidCount == 0 and "✅ Compatible with savedData.lua" or "❌ Needs fixing"))
     else
         print("Unknown command: " .. msg)
-        print("Available commands: test, show, hide, data, save, reload, size, big, huge, debug, forcesave")
+        print("Available commands: test, show, hide, data, save, reload, size, big, huge, debug, forcesave, fixdata, parsedata, exportdata, loaddefaults, validatedata")
     end
 end
 
